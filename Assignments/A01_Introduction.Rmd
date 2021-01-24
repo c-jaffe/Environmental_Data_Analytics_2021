@@ -1,6 +1,6 @@
 ---
 title: "Assignment 1: Introduction"
-author: "Student Name"
+author: "Cate Jaffe"
 output: pdf_document
 geometry: margin=2.54cm
 ---
@@ -16,21 +16,21 @@ This exercise accompanies the introductory material in Environmental Data Analyt
 6. When you have completed the assignment, **Knit** the text and code into a single PDF file.
 8. After Knitting, submit the completed exercise (PDF file) to the dropbox in Sakai. Add your last name into the file name (e.g., "Salk_A03_Introduction.Rmd") prior to submission.
 
-The completed exercise is due on <>.
+The completed exercise is due on <01/26/2021>.
 
 ## 1) Discussion Questions
 
 1. What are your previous experiences with data analytics, R, and Git? Include both formal and informal training.
 
-> Answer: 
+> Answer: I used R a little for my undergraduate thesis research but my first formal class in R was statistics, taken during my first semester in the MEM program. I continued to use R to wrangle, tidy, and analyze data for my research assistantship last year and over the summer. I'm somewhat familar with the tidyverse packages and have limited experience running linear regressions, GLMs, etc in R. I used Git in Advanced GIS last semester, but have not used R/Studio and Git together before, and I'm less savvy with Git than I would like to be. 
 
 2. Are there any components of the course about which you feel confident?
 
-> Answer: 
+> Answer: I feel relatively confident about tidying / wrangling large datasets in R as I did some of this kind of work over the Summer. I'm also confident in my ability to troubleshoot fustrating problems and debug errors in my code.
 
 3. Are there any components of the course about which you feel apprehensive?
 
-> Answer: 
+> Answer: I've struggled in the past with interpreting outputs of statistical tests such as GLMs, etc. and it ususally takes me a while to wrap my head around the meaning of outputs. I'd also like to be more savvy/efficient at data visualization in R.
 
 
 ## 2) GitHub
