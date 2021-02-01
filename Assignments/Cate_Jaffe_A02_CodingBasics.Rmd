@@ -1,0 +1,109 @@
+---
+title: "Assignment 2: Coding Basics"
+author: "Jaffe"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+
+## OVERVIEW
+
+This exercise accompanies the lessons in Environmental Data Analytics on coding basics. 
+
+## Directions
+1. Change "Student Name" on line 3 (above) with your name.
+2. Work through the steps, **creating code and output** that fulfill each instruction.
+3. Be sure to **answer the questions** in this assignment document.
+4. When you have completed the assignment, **Knit** the text and code into a single PDF file.
+5. After Knitting, submit the completed exercise (PDF file) to the dropbox in Sakai. Add your first and last name into the file name (e.g., "FirstLast_A02_CodingBasics.Rmd") prior to submission.
+
+
+
+## Basics Day 1
+
+1. Generate a sequence of numbers from one to 100, increasing by fours. Assign this sequence a name.
+
+2. Compute the mean and median of this sequence. 
+
+3. Ask R to determine whether the mean is greater than the median. 
+
+4. Insert comments in your code to describe what you are doing.
+
+```{r}
+#1. Use seq("from", "to", "by") function to generate sequence from 1 to 100, by 4.
+seqBy4 <- seq(1, 100, 4) # output is a numeric list assigned to an object.
+
+
+#2. Use functions mean() and median() to generate numeric list of the mean and median of each number in the sequence created above
+
+mean(seqBy4)
+
+median(seqBy4)
+
+#3. Check if the mean of the sequence is greater than the median using logical statement
+
+mean(seqBy4) > median(seqBy4)
+
+```
+
+## Basics Day 2
+
+5. Create a series of vectors, each with four components, consisting of (a) names of students, (b) test scores out of a total 100 points, and (c) whether or not they have passed the test (TRUE or FALSE) with a passing grade of 50.
+
+6. Label each vector with a comment on what type of vector it is.
+
+7. Combine each of the vectors into a data frame. Assign the data frame an informative name.
+
+8. Label the columns of your data frame with informative titles.
+
+```{r}
+
+#5-6. Make 3 vectors (student names, test scores, pass/fail) with 4 observations each. 
+
+studentNames <- c("Harry", "Ron", "Hermione", "Ginny") # character vector 
+scores <- c(83, 49, 98, 90) # numeric vector, score listed in order to match names
+PF <- c(TRUE, FALSE, TRUE, TRUE) # logical vector, TRUE = "pass" FALSE = "fail", passing grade is 50
+
+#7. Combine vectors into single dataframe
+
+testResults <- data.frame(studentNames, scores, PF)
+
+#8. Create column names.
+
+names(testResults) <- c("student_name", "score", "pass_or_fail" ) ; View(testResults)
+
+
+```
+
+9. QUESTION: How is this data frame different from a matrix?
+
+> Answer: A matrix can only store one type of data. All entries in the matrix would have to be of one type, such as numeric. Dataframes can store data of multiple types. For instance, the dataframe created above contains three different data types: numeric, character and logical. 
+
+10. Create a function with an if/else statement. Your function should determine whether a test score is a passing grade of 50 or above (TRUE or FALSE). You will need to choose either the `if` and `else` statements or the `ifelse` statement. Hint: Use `print`, not `return`. The name of your function should be informative.
+
+11. Apply your function to the vector with test scores that you created in number 5. 
+
+```{r}
+
+PassFailCheck <- function(grade) { # the only input to the function will be the test score
+  
+  results <- ifelse(grade > 50, "PASS", "FAIL") # if the score is greater than 50, the student passes, otherwise the student fails.
+ 
+   print(results) # print results of "PASS" or "FAIL"
+}
+
+# apply new function to vector of students scores created above
+PassFailCheck(scores)
+
+
+```
+
+12. QUESTION: Which option of `if` and `else` vs. `ifelse` worked? Why?
+
+> Answer: 'ifelse' was a better choice than 'if'&'else' for this example because we needed to apply our function to a vector. It is possible to create the same test with 'if' and 'else' but this function would only apply to the first element of the input vector. Using 'ifelse' permits application to (and return of) a vector with multiple observations. Additionally, 'ifelse' makes the code slightly shorter and simpler. 
+
+
+
+
+
