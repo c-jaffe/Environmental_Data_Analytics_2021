@@ -34,15 +34,14 @@ This exercise accompanies the lessons in Environmental Data Analytics on coding 
 #1. Use seq("from", "to", "by") function to generate sequence from 1 to 100, by 4.
 seqBy4 <- seq(1, 100, 4) # output is a numeric list assigned to an object.
 
-
-#2. Use functions mean() and median() to generate numeric list of the mean and median of each number in the sequence created above
+#2. Use functions mean() and median() to generate numeric list of the mean and 
+#   median of each number in the sequence created above
 
 mean(seqBy4)
 
 median(seqBy4)
 
-#3. Check if the mean of the sequence is greater than the median using logical statement
-
+#3. Check if mean of sequence is greater than median using logical statement.
 mean(seqBy4) > median(seqBy4)
 
 ```
@@ -60,19 +59,16 @@ mean(seqBy4) > median(seqBy4)
 ```{r}
 
 #5-6. Make 3 vectors (student names, test scores, pass/fail) with 4 observations each. 
-
 studentNames <- c("Harry", "Ron", "Hermione", "Ginny") # character vector 
-scores <- c(83, 49, 98, 90) # numeric vector, score listed in order to match names
-PF <- c(TRUE, FALSE, TRUE, TRUE) # logical vector, TRUE = "pass" FALSE = "fail", passing grade is 50
+scores <- c(83, 49, 98, 90) # numeric vector, scores in order to match names
+PF <- c(TRUE, FALSE, TRUE, TRUE) # logical vector 
+  # TRUE = "pass" FALSE = "fail", passing grade is 50
 
 #7. Combine vectors into single dataframe
-
 testResults <- data.frame(studentNames, scores, PF)
 
 #8. Create column names.
-
 names(testResults) <- c("student_name", "score", "pass_or_fail" ) ; View(testResults)
-
 
 ```
 
@@ -86,11 +82,13 @@ names(testResults) <- c("student_name", "score", "pass_or_fail" ) ; View(testRes
 
 ```{r}
 
-PassFailCheck <- function(grade) { # the only input to the function will be the test score
+PassFailCheck <- function(grade) { # only input to the function will be test score
   
-  results <- ifelse(grade > 50, "PASS", "FAIL") # if the score is greater than 50, the student passes, otherwise the student fails.
- 
-   print(results) # print results of "PASS" or "FAIL"
+  # if score is greater than 50, student passes, otherwise student fails.
+  results <- ifelse(grade > 50, "PASS", "FAIL") 
+    
+  # print results of "PASS" or "FAIL"
+  print(results) 
 }
 
 # apply new function to vector of students scores created above
