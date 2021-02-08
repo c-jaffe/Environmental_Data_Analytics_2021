@@ -30,7 +30,7 @@ R treats objects differently based on their characteristics. For more informatio
 Define what each new piece of syntax does below (i.e., fill in blank comments). Note that the R chunk has been divided into sections (# at beginning of line, ---- at end)
 ```{r}
 # Vectors ----
-vector1 <- c(1,2,5.3,6,-2,4) # numeric vector
+vector1 <- c(1,2,5.3,6,-2,4) # numeric vector, all must be same type.
 vector1
 vector2 <- c("one","two","three") # character vector
 vector2
@@ -94,11 +94,24 @@ Find a ten-day forecast of temperatures (Fahrenheit) for Durham, North Carolina.
 
 ```{r}
 
+highF <- c(53, 55, 54, 49, 53, 56, 53, 42, 37, 42)
+lowF <- c(25, 41, 28,30,20,33,21,18,26,20)
+
+
 ```
 
 Now, create two additional vectors that include the ten-day forecast for the high and low temperatures in Celsius. Use a function to create the two new vectors from your existing ones in Fahrenheit.
 
 ```{r}
+
+to_celcius <- function(x) {
+  (x - 32)*(5/9)
+}
+
+
+highC <- to_celcius(highF)
+
+lowC <- to_celcius(lowF)
 
 ```
 
@@ -106,11 +119,17 @@ Combine your four vectors into a data frame and add informative column names.
 
 ```{r}
 
+tempDf <- data.frame(highF, lowF, highC, lowC) #create dataframe
+
+colnames(tempDf) <- c("High_F", "Low_F", "High_C", "Low_C")
+
 ```
 
 Use the common functions `summary` and `sd` to obtain basic data summaries of the ten-day forecast. How would you call these functions differently for the entire data frame vs. a single column? Attempt to demonstrate both options below.
 
 ```{r}
+
+
 
 ```
 

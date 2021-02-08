@@ -104,6 +104,8 @@ USGS.flow.data <- read.csv("./Data/Raw/USGS_Site02085000_Flow_Raw.csv")
 #For knitting the .Rmd file you need to added an extra "." to the relative path
 # R Markdown documents are compiled in separate R sessions to enhance reproducibility, so you current R console has nothing to do with the compilation of the R Markdown documents.
 
+# .. backs up to folder one level back.
+
 # What happens if we don't assign a name to our imported dataset?
 #read.csv("../Data/Raw/USGS_Site02085000_Flow_Raw.csv")
 
