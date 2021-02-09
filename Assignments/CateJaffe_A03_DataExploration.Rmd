@@ -203,6 +203,7 @@ ggplot(Litter) +
 ggplot(Litter) + 
   geom_boxplot( aes(x = functionalGroup, y = dryMass) )
 
+
 # violin
 ggplot(Litter) + 
   geom_violin( aes(x = functionalGroup, y = dryMass) )
@@ -212,7 +213,7 @@ ggplot(Litter) +
 
 Why is the boxplot a more effective visualization option than the violin plot in this case?
 
-> Answer: 
+> Answer: The benefit of the violin plot is that it displays the density distribution of the plotted data by group, while a boxplot does not. However, with these data it appears that many of the observations are clustered around low numbers or near 0, with a few observations at higher values. This makes it hard to see the shape of the density distributions in the violin plot, and the resulting plot doesn't provide much information about density distributions or group means. In the box plot, it is possible to see group means for some of the functional groups. Both the box plot and the violin plot might benefit from a log transformed y access to address the problem of observations clustered around 0.
 
 What type(s) of litter tend to have the highest biomass at these sites? 
 
