@@ -24,7 +24,9 @@ The completed exercise is due on Tuesday, Feb 16 @ 11:59pm.
 
 ```{r setup, message = FALSE}
 # set wd for knit PDF to class folder
-knitr::opts_knit$set(root.dir = "C:/ENV872/Environmental_Data_Analytics_2021")
+knitr::opts_knit$set(root.dir = "C:/ENV872/Environmental_Data_Analytics_2021",
+                     echo = TRUE,
+                     tidy.opts=list(width.cutoff=80), tidy = FALSE)
 
 ```
 
@@ -175,8 +177,7 @@ dataList_Site.Name <- list(O3_2018_processed$Site.Name,
 # successively input datasets into intersect() function, two datasets at a time
 commonSites <- Reduce(intersect, dataList_Site.Name)
 
-# Some entries have a blank site name, item #13 in list is blank.
-# remove blank site name (item #13 in list):
+# Some entries have a blank site name, remove blank site name 
 commonSites <- commonSites[commonSites != ""]
 
 # filter then summarize by date, site, parameter, county
