@@ -40,10 +40,10 @@ library(lubridate)
 
 ```{r import data }
 
-O3_2018 <- read.csv("./Data/Raw/EPAair_O3_NC2018_raw.csv", stringsAsFactors = TRUE)
-O3_2019 <- read.csv("./Data/Raw/EPAair_O3_NC2019_raw.csv", stringsAsFactors = TRUE)
-PM25_2018 <- read.csv("./Data/Raw/EPAair_PM25_NC2018_raw.csv", stringsAsFactors = TRUE)
-PM25_2019 <- read.csv("./Data/Raw/EPAair_PM25_NC2019_raw.csv", stringsAsFactors = TRUE)
+O3_2018 <- read.csv("./Data/Raw/EPAair_O3_NC2018_raw.csv", stringsAsFactors = FALSE)
+O3_2019 <- read.csv("./Data/Raw/EPAair_O3_NC2019_raw.csv", stringsAsFactors = FALSE)
+PM25_2018 <- read.csv("./Data/Raw/EPAair_PM25_NC2018_raw.csv", stringsAsFactors = FALSE)
+PM25_2019 <- read.csv("./Data/Raw/EPAair_PM25_NC2019_raw.csv", stringsAsFactors = FALSE)
 
 ```
 
@@ -83,10 +83,10 @@ str(PM25_2019)
 
 ```{r, message = FALSE}
 #3. change date column (factor) to date data type for all data, check class
-O3_2018$Date <- as.Date(O3_2018$Date, format = "%m/%d/%y"); class(O3_2018$Date)
-O3_2019$Date <- as.Date(O3_2019$Date, format = "%m/%d/%y"); class(O3_2019$Date)
-PM25_2018$Date <- as.Date(PM25_2018$Date, format = "%m/%d/%y"); class(PM25_2018$Date)
-PM25_2019$Date <- as.Date(PM25_2019$Date, format = "%m/%d/%y"); class(PM25_2019$Date)
+O3_2018$Date <- as.Date(O3_2018$Date, format = "%m/%d/%Y"); class(O3_2018$Date)
+O3_2019$Date <- as.Date(O3_2019$Date, format = "%m/%d/%Y"); class(O3_2019$Date)
+PM25_2018$Date <- as.Date(PM25_2018$Date, format = "%m/%d/%Y"); class(PM25_2018$Date)
+PM25_2019$Date <- as.Date(PM25_2019$Date, format = "%m/%d/%Y"); class(PM25_2019$Date)
 
 #4. select columns of interest
 # O3 2018
@@ -166,12 +166,18 @@ O3_PM25_1819 <- rbind(O3_2018_processed,
 
 #8 wrangle
 # create list of common sites
-commonSites <- intersect(O3_2018_processed$Site.Name,
-                         PM25_2019_processed$Site.Name)
-print(commonSites)
+# list datasets of interest
+dataList_Site.Name <- list(O3_2018_processed$Site.Name,
+              O3_2019_processed$Site.Name,
+              PM25_2018_processed$Site.Name,
+              PM25_2019_processed$Site.Name)
+
+# successively input datasets into intersect() function, two datasets at a time
+commonSites <- Reduce(intersect, dataList_Site.Name)
+
 # Some entries have a blank site name, item #13 in list is blank.
 # remove blank site name (item #13 in list):
-commonSites <- commonSites[-13]
+commonSites <- commonSites[commonSites != ""]
 
 # filter then summarize by date, site, parameter, county
 O3_PM25_1819_processed <- 
