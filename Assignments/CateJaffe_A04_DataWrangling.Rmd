@@ -23,7 +23,7 @@ The completed exercise is due on Tuesday, Feb 16 @ 11:59pm.
 
 
 ```{r setup, message = FALSE}
-# set wd for knit PDF to class folder
+# set wd to class folder
 knitr::opts_knit$set(root.dir = "C:/ENV872/Environmental_Data_Analytics_2021",
                      echo = TRUE,
                      tidy.opts=list(width.cutoff=80), tidy = FALSE)
@@ -41,7 +41,7 @@ library(lubridate)
 
 
 ```{r import data }
-
+# read in data
 O3_2018 <- read.csv("./Data/Raw/EPAair_O3_NC2018_raw.csv", stringsAsFactors = FALSE)
 O3_2019 <- read.csv("./Data/Raw/EPAair_O3_NC2019_raw.csv", stringsAsFactors = FALSE)
 PM25_2018 <- read.csv("./Data/Raw/EPAair_PM25_NC2018_raw.csv", stringsAsFactors = FALSE)
@@ -52,7 +52,7 @@ PM25_2019 <- read.csv("./Data/Raw/EPAair_PM25_NC2019_raw.csv", stringsAsFactors 
 
 2. Explore the dimensions, column names, and structure of the datasets. 
 
-```{r, message = FALSE}
+```{r, results = "hide"}
 
 # 2018 O3 dataset
 dim(O3_2018)
@@ -155,7 +155,7 @@ write.csv(PM25_2019_processed, "./Data/Processed/EPAair_PM25_NC2019_processed.cs
 10. Call up the dimensions of your new tidy dataset.
 11. Save your processed dataset with the following file name: "EPAair_O3_PM25_NC1718_Processed.csv"
 
-```{r}
+```{r, message = FALSE}
 #7. combine data sets
 # check colnames match
 colnames(O3_2018_processed); colnames(O3_2019_processed); colnames(PM25_2018_processed); colnames(PM25_2019_processed)
@@ -212,7 +212,7 @@ write.csv(O3_PM25_1819_processed_wide, "./Data/Processed/EPAair_O3_PM25_NC1819_P
 
 13. Call up the dimensions of the summary dataset.
 
-```{r}
+```{r, message = FALSE}
 #12
 O3_PM25_1819_processed_wide_summary <- 
   O3_PM25_1819_processed_wide %>% 
