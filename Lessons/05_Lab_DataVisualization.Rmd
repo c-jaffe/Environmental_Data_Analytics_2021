@@ -19,10 +19,12 @@ editor_options:
 The expression function can be used when you want to add mathematical symbols and subscripts mixed with regular letter to labels. 
 
 ```{r}
+
+x <- 10
 Plot_text <-
 ggplot(data=data.frame(x=0,y=0))+
   geom_point(aes(x=x,y=y)) +
-  geom_text(x=0,y=0.025,label=expression(paste("Mean is ", mu,",", R^{2},'=0.6')))
+  geom_text(x=0,y=0.025,label=expression(paste("Mean is ", x, ",", R^{2},'=0.6')))
 print(Plot_text)
 
 ggsave("./Output/Plot_text.jpg",Plot_text, height = 4, width = 6, units = "in", dpi = 300)
@@ -60,6 +62,12 @@ Exercise: build your own scatterplots of PeterPaul.chem.nutrients
 # Color your points by year, and facet by lake in two rows.
 # Change the ylab name
 
+ggplot(subset(PeterPaul.chem.nutrients, depth == 0), aes( x = daynum, y = temperature_C, color = year4))+
+  geom_point() +
+  facet_wrap(vars(lakename), nrow = 2) +
+  ylab("Surface Temperature (C)") + 
+  xlab("Day of Year")
+
 
 #2. 
 # Plot temperature by date. Color your points by depth.
@@ -67,7 +75,12 @@ Exercise: build your own scatterplots of PeterPaul.chem.nutrients
 # Change the color palette to magma and play with direction (+- 1), which one makes more sense?
 # Change x axis to include marker/labels every 5 years
 
-
+ggplot(PeterPaul.chem.nutrients, aes( x = sampledate, y = temperature_C, color = depth) ) +
+  scale_color_viridis(option = "magma", direction = -1) +
+  geom_point( size = 2, alpha = .5) +
+  facet_wrap(vars(lakename), nrow = 2) +
+  ylab("Surface Temperature (C)") + 
+  scale_x_date( date_breaks = "5 years", date_labels = "%Y")
 
 
 ```
@@ -81,6 +94,11 @@ Exercise: Plot relationships between air quality measurements
 # Plot AQI values for ozone by PM2.5, colored by latitude 
 # Make the points 50 % transparent
 # Add a line of best fit for the linear regression of these variables.
+
+EPAair %>% 
+  ggplot(aes(x = Ozone, y = PM2.5, color = lat_mean)) +
+  geom_point(alpha = .5) + 
+  geom_smooth( method = lm, color = "orange")
 
 
 
