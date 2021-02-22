@@ -1,0 +1,214 @@
+---
+title: "Assignment 5: Data Visualization"
+author: "Cate Jaffe"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+
+## OVERVIEW
+
+This exercise accompanies the lessons in Environmental Data Analytics on Data Visualization 
+
+## Directions
+1. Change "Student Name" on line 3 (above) with your name.
+2. Work through the steps, **creating code and output** that fulfill each instruction.
+3. Be sure to **answer the questions** in this assignment document.
+4. When you have completed the assignment, **Knit** the text and code into a single PDF file.
+5. After Knitting, submit the completed exercise (PDF file) to the dropbox in Sakai. Add your last name into the file name (e.g., "Fay_A05_DataVisualization.Rmd") prior to submission.
+
+The completed exercise is due on Tuesday, February 23 at 11:59 pm.
+
+
+
+## Set up your session 
+1. Set up your session. Verify your working directory and load the tidyverse 
+and cowplot packages. Upload the NTL-LTER processed data files for nutrients 
+and chemistry/physics for Peter and Paul Lakes (both the tidy 
+[`NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv`] and the gathered
+[`NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv`] versions) and 
+the processed data file for the Niwot Ridge litter dataset. 
+
+2. Make sure R is reading dates as date format; if not change the format to date.
+
+```{r setup}
+#1 
+# check directory
+getwd()
+
+# library
+# install.packages("cowplot")
+library(tidyverse)
+library(cowplot)
+
+# install.packages("viridis")
+# install.packages("RColorBrewer")
+# install.packages("colormap")
+library(viridis)
+library(RColorBrewer)
+library(colormap)
+library(ggridges)
+
+```
+
+
+```{r data import}
+
+lakesTidy <- read.csv("./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv", stringsAsFactors = TRUE)
+
+lakesGathered <- read.csv("./Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv", stringsAsFactors = TRUE)
+
+neonLitter <- read.csv("./Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv", stringsAsFactors = TRUE)
+
+# check if date fields read as Date type.
+str(lakesTidy)
+str(lakesGathered)
+str(neonLitter)
+
+# convert dates to Date type.
+lakesGathered$sampledate <- as.Date(lakesGathered$sampledate)
+lakesTidy$sampledate <- as.Date(lakesTidy$sampledate) # full date
+neonLitter$collectDate <- as.Date(neonLitter$collectDate)
+
+```
+## Define your theme
+3. Build a theme and set it as your default theme.
+
+```{r}
+mytheme <- theme_light(base_size = 14) +
+  theme(axis.text = element_text(color = "black"),
+        legend.position = "top",
+        legend.title = element_blank())
+
+theme_set(mytheme)
+
+
+```
+
+## Create graphs
+For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best practices for data visualization. Ensure your theme, color palettes, axes, and additional aesthetics are edited accordingly.
+
+4. [NTL-LTER] Plot total phosphorus (`tp_ug`) by phosphate (`po4`), with separate aesthetics for Peter and Paul lakes. Add a line of best fit and color it black. Adjust your axes to hide extreme values.
+
+```{r show colors}
+
+scales::show_col(colormap(colormap = colormaps$portland, nshades = 16))
+
+scales::show_col(colormap(colormap = colormaps$greens, nshades = 16))
+
+scales::show_col(colormap(colormap = colormaps$earth, nshades = 16))
+
+scales::show_col(colormap(colormap = colormaps$warm, nshades = 16))
+
+
+```
+
+
+```{r}
+#4 
+
+lakesTidy %>% 
+  ggplot( aes( x = po4, y = tp_ug, color = lakename)) + 
+  geom_point( alpha = .5) + # set transparency
+  scale_color_manual( values = c("#0b61a1ff","#ed7933ff" )) + # set "lakename" variable (two levels) to two colors from "portland" colormap
+  geom_smooth( method = "lm", color = "black", se = FALSE) + # line with linear fit, no display of standard error
+  ylab("Total Phosphorus (ug)") + 
+  xlab("Phosphate (ug)") + 
+  xlim(0,50) # adjust x axis to exclude extreme phosphate value
+
+
+```
+
+
+5. [NTL-LTER] Make three separate boxplots of (a) temperature, (b) TP, and (c) TN, with month as the x axis and lake as a color aesthetic. Then, create a cowplot that combines the three graphs. Make sure that only one legend is present and that graph axes are aligned.
+
+```{r}
+
+# temperature
+plotTemp <- 
+ggplot(lakesTidy, aes( x = as.factor(month) , y = temperature_C, color = lakename)) + # month as.factor() so R displays x axis values as discrete
+  geom_boxplot() + 
+  scale_color_manual( values = c("#0b61a1ff", "#ed7933ff" ) ) + # match colors to previous scatter plot
+  xlab("") + 
+  ylab("Temperature (C)")
+
+# total P
+plotTP <- 
+ggplot(lakesTidy, aes( x = as.factor(month) , y = tp_ug, color = lakename)) + 
+  geom_boxplot() + 
+  scale_color_manual( values = c("#0b61a1ff", "#ed7933ff" ) ) + 
+  xlab("") + 
+  ylab("Total Phosphorus (ug)") 
+
+# total N
+plotTN <- 
+ggplot(lakesTidy, aes( x = as.factor(month) , y = tn_ug, color = lakename)) +
+  geom_boxplot() + 
+  scale_color_manual( values = c("#0b61a1ff", "#ed7933ff" ) ) + 
+  xlab("Month") + 
+  ylab("Total Nitrogen (ug)") 
+
+# put all three plots together into the same grid in one column, three rows
+# remove legends for each plot 
+plotsAll <- 
+plot_grid(plotTemp + theme(legend.position = 'none'),
+          plotTP + theme(legend.position = 'none'), 
+          plotTN + theme(legend.position = 'none'), 
+          nrow = 3, align = 'hv') # align both horizontal and vertical axis
+
+# pull legend from one plot
+# default theme sets legend to top, remove margins around legend
+myLegend <- get_legend(plotTemp + 
+                         theme(legend.box.margin = c(0,0,0,0))) 
+
+# create new plot grid, adding the legend to the top of the plot column
+plot_grid(myLegend, plotsAll, 
+          ncol = 1, 
+          rel_heights = c(.2, 3)) # reduce relative height of legend
+
+
+
+```
+
+Question: What do you observe about the variables of interest over seasons and between lakes? 
+
+> Answer: The temperature of both lakes appears to peak in the summer, around August. In most months sampled, total phosphorus appears higher (potentially statistically significantly higher) in Peter Lake, relative to Paul Lake. This trend in phosporous content appears slightly more pronounced in summer, when compared to the observations made in May and June. Like for phosporous, summer (prinicipally August) levels of total nitrogen appear to be slightly higher in Peter Lake when compared to Paul Lake. Generally, the difference between nutrient levels in Peter and Paul Lakes is minimal in spring.
+
+6. [Niwot Ridge] Plot a subset of the litter dataset by displaying only the "Needles" functional group. Plot the dry mass of needle litter by date and separate by NLCD class with a color aesthetic. (no need to adjust the name of each land use)
+
+7. [Niwot Ridge] Now, plot the same plot but with NLCD classes separated into three facets rather than separated by color. 
+
+```{r}
+#6
+
+neonLitter %>% filter(functionalGroup == "Needles") %>% 
+  ggplot( aes (y = dryMass, x = collectDate, 
+               color = nlcdClass)) + 
+  scale_color_manual( values = c( "#005a24ff","#4bb062ff", "#c1b128ff" )) + 
+  geom_point( alpha = .6) + 
+  scale_x_date( breaks = "3 months",
+                date_labels = "%b %Y") + 
+  theme(axis.text.x = element_text( angle = 45, 
+                                    hjust = 1)) + 
+  xlab("Collection Date") + 
+  ylab("Dry Mass (g)")
+
+
+#7
+neonLitter %>% filter(functionalGroup == "Needles") %>% 
+  ggplot( aes (y = dryMass, x = collectDate)) + 
+  geom_point() +
+  scale_x_date( breaks = "6 months",
+                date_labels = "%b %Y",
+                limits = c(as.Date("2016-05-01"), max(neonLitter$collectDate))) + # shift limits so date 6-mo labels are closer to sampling dates
+  theme(axis.text.x = element_text( angle = 45, 
+                                    hjust = 1)) + # tilt date on x axis by 45 degrees
+  facet_wrap(vars(nlcdClass), nrow = 1, ncol = 3) + 
+  xlab("Collection Date") + 
+  ylab("Dry Mass (g)")
+
+```
+Question: Which of these plots (6 vs. 7) do you think is more effective, and why? 
+
+> Answer: Plot #7 is more effective because the overall trend in dry mass across time is separated for each land cover class, allowing for easier and more intuitive comparison between the three land classes. In the first plot, all three land classes had similar drymasses and the points were layered together and hard to distinguish, even despite the color coding by land cover. In the second plot, it is possible to see possible downward trends in dry mass in evergreen forests and grassland/herbaceuous, and a potential upward trend in dry mass of scrub/shrub land covers. It was not possible to see these potential trends in the first plot.
