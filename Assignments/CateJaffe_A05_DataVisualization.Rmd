@@ -34,7 +34,12 @@ the processed data file for the Niwot Ridge litter dataset.
 
 ```{r setup}
 #1 
-# check directory
+# set .rmd Knit directory
+knitr::opts_knit$set( root.dir = "C:/ENV872/Environmental_Data_Analytics_2021",
+                  tidy.opts=list(width.cutoff = 50),
+                  tidy = TRUE)
+
+# check working directory
 getwd()
 
 # library
@@ -55,11 +60,17 @@ library(ggridges)
 
 ```{r data import}
 
-lakesTidy <- read.csv("./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv", stringsAsFactors = TRUE)
+lakesTidy <- 
+  read.csv("./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv",
+           stringsAsFactors = TRUE)
 
-lakesGathered <- read.csv("./Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv", stringsAsFactors = TRUE)
+lakesGathered <- 
+  read.csv("./Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv", 
+           stringsAsFactors = TRUE)
 
-neonLitter <- read.csv("./Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv", stringsAsFactors = TRUE)
+neonLitter <- 
+  read.csv("./Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv", 
+           stringsAsFactors = TRUE)
 
 # check if date fields read as Date type.
 str(lakesTidy)
@@ -76,10 +87,15 @@ neonLitter$collectDate <- as.Date(neonLitter$collectDate)
 3. Build a theme and set it as your default theme.
 
 ```{r}
-mytheme <- theme_light(base_size = 14) +
+mytheme <- theme_light(base_size = 14) + 
   theme(axis.text = element_text(color = "black"),
         legend.position = "top",
-        legend.title = element_blank())
+        legend.title = element_blank(),
+        # set margins around axis titles so axis labels don't overlap
+        axis.title.x = element_text(
+          margin = margin(t = 20, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text( 
+          margin = margin(t = 0, r = 20, b = 0, l = 0)))
 
 theme_set(mytheme)
 
@@ -91,15 +107,15 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 
 4. [NTL-LTER] Plot total phosphorus (`tp_ug`) by phosphate (`po4`), with separate aesthetics for Peter and Paul lakes. Add a line of best fit and color it black. Adjust your axes to hide extreme values.
 
-```{r show colors}
+```{r show colors, include = FALSE}
 
-scales::show_col(colormap(colormap = colormaps$portland, nshades = 16))
+#scales::show_col(colormap(colormap = colormaps$portland, nshades = 16))
 
-scales::show_col(colormap(colormap = colormaps$greens, nshades = 16))
+#scales::show_col(colormap(colormap = colormaps$greens, nshades = 16))
 
-scales::show_col(colormap(colormap = colormaps$earth, nshades = 16))
+#scales::show_col(colormap(colormap = colormaps$earth, nshades = 16))
 
-scales::show_col(colormap(colormap = colormaps$warm, nshades = 16))
+#scales::show_col(colormap(colormap = colormaps$warm, nshades = 16))
 
 
 ```
@@ -111,11 +127,14 @@ scales::show_col(colormap(colormap = colormaps$warm, nshades = 16))
 lakesTidy %>% 
   ggplot( aes( x = po4, y = tp_ug, color = lakename)) + 
   geom_point( alpha = .5) + # set transparency
-  scale_color_manual( values = c("#0b61a1ff","#ed7933ff" )) + # set "lakename" variable (two levels) to two colors from "portland" colormap
-  geom_smooth( method = "lm", color = "black", se = FALSE) + # line with linear fit, no display of standard error
+  # set "lakename" variable (two levels) to two colors from "portland" colormap
+  scale_color_manual( values = c("#0b61a1ff","#ed7933ff" )) + 
+  # line with linear fit, no display of standard error
+  geom_smooth( method = "lm", color = "black", se = FALSE) + 
   ylab("Total Phosphorus (ug)") + 
   xlab("Phosphate (ug)") + 
-  xlim(0,50) # adjust x axis to exclude extreme phosphate value
+  # adjust x axis to exclude extreme phosphate value
+  xlim(0,50) 
 
 
 ```
@@ -123,19 +142,24 @@ lakesTidy %>%
 
 5. [NTL-LTER] Make three separate boxplots of (a) temperature, (b) TP, and (c) TN, with month as the x axis and lake as a color aesthetic. Then, create a cowplot that combines the three graphs. Make sure that only one legend is present and that graph axes are aligned.
 
-```{r}
-
+```{r, fig.width = 10, fig.height = 20}
+#5
 # temperature
 plotTemp <- 
-ggplot(lakesTidy, aes( x = as.factor(month) , y = temperature_C, color = lakename)) + # month as.factor() so R displays x axis values as discrete
+  # exclude month 2 (Feb) because no obervations of variable of interest during month 2
+ggplot(filter(lakesTidy, month != 2), 
+       # month as.factor() so R displays x axis values as discrete
+       aes( x = as.factor(month) , y = temperature_C, color = lakename)) + 
   geom_boxplot() + 
-  scale_color_manual( values = c("#0b61a1ff", "#ed7933ff" ) ) + # match colors to previous scatter plot
+  # match colors to previous scatter plot
+  scale_color_manual( values = c("#0b61a1ff", "#ed7933ff" ) ) + 
   xlab("") + 
-  ylab("Temperature (C)")
+  ylab("Temperature (C)") 
 
 # total P
 plotTP <- 
-ggplot(lakesTidy, aes( x = as.factor(month) , y = tp_ug, color = lakename)) + 
+ggplot(filter(lakesTidy, month != 2),
+       aes( x = as.factor(month) , y = tp_ug, color = lakename)) + 
   geom_boxplot() + 
   scale_color_manual( values = c("#0b61a1ff", "#ed7933ff" ) ) + 
   xlab("") + 
@@ -143,11 +167,13 @@ ggplot(lakesTidy, aes( x = as.factor(month) , y = tp_ug, color = lakename)) +
 
 # total N
 plotTN <- 
-ggplot(lakesTidy, aes( x = as.factor(month) , y = tn_ug, color = lakename)) +
+ggplot(filter(lakesTidy, month != 2), 
+       aes( x = as.factor(month), y = tn_ug, color = lakename)) +
   geom_boxplot() + 
   scale_color_manual( values = c("#0b61a1ff", "#ed7933ff" ) ) + 
   xlab("Month") + 
   ylab("Total Nitrogen (ug)") 
+
 
 # put all three plots together into the same grid in one column, three rows
 # remove legends for each plot 
@@ -155,17 +181,20 @@ plotsAll <-
 plot_grid(plotTemp + theme(legend.position = 'none'),
           plotTP + theme(legend.position = 'none'), 
           plotTN + theme(legend.position = 'none'), 
-          nrow = 3, align = 'hv') # align both horizontal and vertical axis
+          # align both horizontal and vertical axis
+          nrow = 3, align = 'hv') 
 
 # pull legend from one plot
 # default theme sets legend to top, remove margins around legend
 myLegend <- get_legend(plotTemp + 
-                         theme(legend.box.margin = c(0,0,0,0))) 
+                         theme(legend.box.margin = margin(0,0,0,0) )) 
 
 # create new plot grid, adding the legend to the top of the plot column
-plot_grid(myLegend, plotsAll, 
+plot_grid(myLegend, 
+          plotsAll, 
           ncol = 1, 
-          rel_heights = c(.2, 3)) # reduce relative height of legend
+          # reduce relative height of legend
+          rel_heights = c(.2, 3)) 
 
 
 
@@ -201,9 +230,12 @@ neonLitter %>% filter(functionalGroup == "Needles") %>%
   geom_point() +
   scale_x_date( breaks = "6 months",
                 date_labels = "%b %Y",
-                limits = c(as.Date("2016-05-01"), max(neonLitter$collectDate))) + # shift limits so date 6-mo labels are closer to sampling dates
+                # shift limits so date 6-mo labels are closer to plotted points
+                limits = c(as.Date("2016-05-01"),
+                           max(neonLitter$collectDate))) + 
+  # tilt date on x axis by 45 degrees
   theme(axis.text.x = element_text( angle = 45, 
-                                    hjust = 1)) + # tilt date on x axis by 45 degrees
+                                    hjust = 1)) + 
   facet_wrap(vars(nlcdClass), nrow = 1, ncol = 3) + 
   xlab("Collection Date") + 
   ylab("Dry Mass (g)")
