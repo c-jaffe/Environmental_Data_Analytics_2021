@@ -95,11 +95,14 @@ TukeyHSD(Litter.Totals.anova)
 Litter.Totals.groups <- HSD.test(Litter.Totals.anova, "plotID", group = TRUE)
 Litter.Totals.groups
 
+# order by site first?
+abcLabels <- Litter.Totals.groups$groups$
+
 # Graph the results
 Litter.Totals.plot <- ggplot(Litter.Totals, aes(x = plotID, y = dryMass)) +
   geom_boxplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  stat_summary(geom = "text", fun = max, vjust = -1, size = 3.5,
+  stat_summary(geom = "text", fun = max,  size = 3.5, vjust = -1,
                label = c("abc", "ab", "abcd", "bcd", "bcd", "a", 
                          "d", "abcd", "cd", "d", "abcd", "abcd")) +
   labs(x = "Plot ID", y = "Dry Mass (g)") +
@@ -159,12 +162,23 @@ Litter.anova.2way5 <- aov(data = Litter, dryMass ~ Litter.interaction)
 Litter.groups <- HSD.test(Litter.anova.2way5, "Litter.interaction", group = TRUE)
 Litter.groups
 
+#Litter.groups.intCol <- rownames_to_column(Litter.groups$groups, var = "int_terms")
+
+#Litter.groups.intCol[order(Litter.groups.intCol$int_terms), ]
+
+
+
 # Plot the results
 # Edit this graph to make it more visually appealing.
 # Add letters to represent statistical groupings.
 Litter.anova.plot <- ggplot(Litter, aes(y = dryMass, x = nlcdClass, color = functionalGroup)) +
-  geom_boxplot()
-print(Litter.anova.plot)
+  geom_boxplot() +
+  stat_summary(geom = "text", fun = max, size = 3, vjust = -1,
+               label = c("d","d","d","a","d","d","d","d",
+                         "d","d","d","b","d","d","d","d",
+                         "d","cd","d","bc","d","d","d","d")) +
+  ylab(" Dry Mass (g) Log-10 Scale")
+print(Litter.anova.plot) #?
 
 ```
 

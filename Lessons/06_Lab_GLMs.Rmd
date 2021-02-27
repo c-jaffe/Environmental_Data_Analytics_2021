@@ -66,7 +66,7 @@ Are Ozone levels below the threshold for "good" AQI index (0-50)?
 
 > Exercise 1: State the hypotheses for testing mean of AQI index.
 
-> Answer: 
+> Answer: Our null hypo is that ozone levels are not below the threshold for good AQI, that is, they are greater than 50. alternative is that they are =< 50.
 
 
 ```{r}
@@ -94,7 +94,7 @@ print(Ozone.plot)
 
 Write a sentence or two about the results of this test. Include both the results of the test and an interpretation that puts the findings in context of the research question.
 
-> 
+> On average ozone measured in NC is less than 50ppm ( t-test, df = 6829, p < .001)
 
 ### Two-sample t-test
 
@@ -163,10 +163,16 @@ For the NTL-LTER dataset, can we predict PM2.5 from Ozone?
 
 #Exercise 3: Run a linear regression PM2.5 by Ozone. Find the p-value and R-squared value. 
 
+# null: there is no relationship
 
+lm1 <- lm(data = EPAair, PM2.5 ~ Ozone)
+summary(lm1)
 
 #Exercise 4: Build a scatterplot. Add a line and standard error for the linear regression. Add the regression equation to the plot
-
+EPAair %>% 
+  ggplot(aes( x = Ozone, y = PM2.5)) + 
+  geom_point(alpha = .4) + 
+  geom_smooth(method = "lm", color = "blue", se = TRUE)
 
 
 ```
@@ -177,15 +183,22 @@ For the NTL-LTER dataset, can we predict PM2.5 from Ozone?
 What other variables can we add to improve model?
 
 ```{r}
-
+library(corrplot)
 #Exercise 5: Build correlation plots and identify more possible explanatory variables to add to the regression.
 
+EPAairSubset <- EPAair %>% select(Month, Year, lat_mean:Ozone) %>%  na.omit()
 
+EPAairCor <- cor(EPAairSubset)
+
+corrplot.mixed(EPAairCor, upper = "ellipse")
 
 
 #Exercise 6: Choose a model by AIC in a Stepwise Algorithm. Do the results from AIC match the variables you selected on Exercise 5?
 
+lm <- lm(data = EPAair, PM2.5 ~ Ozone + Month + Year + lat_mean + lon_mean)
+summary(lm)
 
+step(lm)
 
 
 #Exercise 7: Run another regression using the variables selected on Exercise 6. Compare r-squared value withthe one from Exercise 5. 
