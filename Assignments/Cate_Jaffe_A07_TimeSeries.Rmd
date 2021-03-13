@@ -40,9 +40,10 @@ library(tidyverse)
 library(lubridate)
 library(zoo)
 library(trend)
+library(colormap)
 
 
-mytheme <- theme_light( base_size = 14) + 
+mytheme <- theme_classic( base_size = 14) + 
   theme( axis.text = element_text( color = "#222222ff"),
          legend.position = "top",
          # remove legend title
@@ -148,7 +149,7 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 
 8. Use a linear interpolation to fill in missing daily data for ozone concentration. Why didn't we use a piecewise constant or spline interpolation?
 
-```{r}
+```{r clean NAs}
 #8
 summary(GaringerOzone$Daily.Max.8.hour.Ozone.Concentration)
 
@@ -166,24 +167,20 @@ summary(GaringerOzone$ozone_clean)
 
 9. Create a new data frame called `GaringerOzone.monthly` that contains aggregated data: mean ozone concentrations for each month. In your pipe, you will need to first add columns for year and month to form the groupings. In a separate line of code, create a new Date column with each month-year combination being set as the first day of the month (this is for graphing purposes only)
 
-```{r}
+```{r monthly summarize}
 #9
 GaringerOzone.monthly <- 
-  GaringerOzone %>% group_by(month(Date), year(Date)) %>% 
-  summarise( mean = mean(ozone_clean)) %>% 
-  # rename month and year columns in grouped df
-  rename("month" = "month(Date)", "year" = "year(Date)" ) %>% 
-  # new Date column with month, year combo
-  # set day to 01 for all dates and convert to date format
-  mutate(month_year = mdy(paste(month,"-01-",year)))
-
+  GaringerOzone %>% 
+  mutate(month_year = mdy(paste(month(Date),"-01-",year(Date)))) %>% 
+    group_by(month_year) %>%
+    summarise( mean = mean(ozone_clean))
   
 ```
 
 
 10. Generate two time series objects. Name the first `GaringerOzone.daily.ts` and base it on the dataframe of daily observations. Name the second `GaringerOzone.monthly.ts` and base it on the monthly average ozone values. Be sure that each specifies the correct start and end dates and the frequency of the time series.
 
-```{r}
+```{r time series object}
 #10
 f_month = month(first(GaringerOzone$Date))
 f_day = day(first(GaringerOzone$Date))
@@ -202,7 +199,7 @@ GaringerOzone.monthly.ts <- ts(GaringerOzone.monthly$mean,
 
 11. Decompose the daily and the monthly time series objects and plot the components using the `plot()` function.
 
-```{r}
+```{r decompose}
 #11
 dailyDecomp <- stl(GaringerOzone.daily.ts, s.window = "periodic")
 plot(dailyDecomp)
@@ -215,20 +212,32 @@ plot(monthlyDecomp)
 
 12. Run a monotonic trend analysis for the monthly Ozone series. In this case the seasonal Mann-Kendall is most appropriate; why is this?
 
-```{r}
+```{r trend analysis}
 #12
+trendMonthly <- Kendall::SeasonalMannKendall(GaringerOzone.monthly.ts)
+trendMonthlySMK <- smk.test(GaringerOzone.monthly.ts)
 
-
+summary(trendMonthly)
+summary(trendMonthlySMK)
 
 ```
 
-> Answer: 
+> Answer: The seasonal component of variation in the monthly data appears to have a cyclic "up and down" pattern in the components plot above. The other monotonic trend analysis options do not assume seasonality, but the Seasonal Mann Kendall does assume seasonality in the data and accomodates non-normal (non-parametric) data as well.
 
 13. Create a plot depicting mean monthly ozone concentrations over time, with both a geom_point and a geom_line layer. Edit your axis labels accordingly.
 
-```{r}
+```{r plot}
 # 13
-
+GaringerOzone.monthly %>% 
+  ggplot(aes( x = month_year, y = mean)) + 
+  geom_point(color = "#0b4a92ff", alpha = .5) + 
+  geom_line(color = "#0b4a92ff", alpha = .8) + 
+  scale_x_date(date_labels = "%Y", 
+               breaks = "1 year") + 
+  labs( x = "Date", 
+        y = "Mean Ozone Concentration (ppm)") + 
+  ggtitle("Mean Monthly Ozone Concentrations between 2010 and 2019") + 
+  theme(plot.title = element_text(vjust = 1))
 
 
 
@@ -236,7 +245,7 @@ plot(monthlyDecomp)
 
 14. To accompany your graph, summarize your results in context of the research question. Include output from the statistical test in parentheses at the end of your sentence. Feel free to use multiple sentences in your interpretation.
 
-> Answer: 
+> Answer: We started with the reasearch question: Have ozone concentrations changed over the 2010s at this station? Thus, our null hypothesis was that ozone concentrations have not changed overtime between 2010 and 2019. Based on this analysis, we can reject the null hypothesis that ozone concentrations have not changed over the 2010's (p = .0467). That is, it appears ozone concentrations have statistically significantly changed in the 2010's. It should be noted this trend is just barely under the significance threshold of p = .05.
 
 15. Subtract the seasonal component from the `GaringerOzone.monthly.ts`. Hint: Look at how we extracted the series components for the EnoDischarge on the lesson Rmd file.
 
@@ -244,14 +253,37 @@ plot(monthlyDecomp)
 
 ```{r}
 #15
+# extract components to DF 
+componentsMonthly <- as.data.frame(monthlyDecomp$time.series)
 
-
-
+componentsMonthly <- 
+  componentsMonthly %>% 
+  mutate(observed = GaringerOzone.monthly$mean,
+         month_year = GaringerOzone.monthly$month_year,
+         no_season = observed - seasonal)
+  
 #16
+trendMonthlyMK <-
+  Kendall::MannKendall(componentsMonthly$no_season)
+summary(trendMonthlyMK)
 
-
-
+# plot
+componentsMonthly %>% 
+  ggplot() + 
+  geom_line(aes( x = month_year, y = observed), 
+             color = "grey", alpha = .5) + 
+  geom_line(aes( x = month_year, y = no_season),
+            color = "#0b4a92ff", alpha = .8) + 
+  scale_x_date(date_labels = "%Y", 
+               breaks = "1 year") + 
+  labs( x = "Date", 
+        y = "Mean Ozone Concentration (ppm)",
+        subtitle = "Raw observations shown in gray, non-seaonsal data shown in blue") + 
+  ggtitle("Mean Monthly Ozone Concentrations between 2010 and 2019") + 
+  theme(plot.title = element_text(vjust = 1),
+        plot.subtitle = element_text(size = 10,
+                                     color = "grey" )) 
 
 ```
 
-> Answer: 
+> Answer: This test with non-seasonal data also shows that Ozone concentrations were changing overtime between 2010 and 2019 (p < .01). The statistical significance of the trend with the non-seasonal data is stronger (p = .0467 vs. p = .007 for non-sesasonal data).
