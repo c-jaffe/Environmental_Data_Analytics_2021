@@ -111,7 +111,8 @@ lakeDat %>%
   select( "lakename", "year4", "daynum", "depth", "temperature_C") %>% 
   # remove NAs (about 1000 observations)
   na.omit() 
-  
+
+
 #5
 lakeDat.July %>% 
   ggplot(aes( x = depth, y = temperature_C)) +
@@ -139,6 +140,8 @@ lm.DepthTemp = lm( data = lakeDat.July,
 
 summary(lm.DepthTemp)
 
+plot(lm.DepthTemp)
+
 ```
 
 
@@ -163,6 +166,7 @@ lm.TempAIC <- lm( data = lakeDat.July,
                        temperature_C ~ year4 + daynum + depth)
 
 step(lm.TempAIC)
+
 # all variables are recommended
 
 #10
@@ -218,7 +222,7 @@ lakeDat.July %>%
 
 ### Overlay of multiple lakes is hard to decipher
 # There is no way to cleanly plot tukey labels. 
-# Apply facet to clean up graph and apply tukey labels.
+# Apply facet to clean up graph and to try applying tukey labels.
 
 ## make data frame with Tukey labels (also created with code in step 15)
 # extract and tukey group labels to dataframe with lakename attached

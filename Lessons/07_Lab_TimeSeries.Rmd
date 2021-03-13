@@ -60,6 +60,7 @@ Rainfall_BR_processed <-
   mutate( Date = my(paste0(Month,"-",Year))) %>% 
   select(Date,Rainfall)
 
+
 #Exercise 3: Repeat exercise 2 to the temperature dataset.
 Temp_BR_processed <-
   Temp_BR %>% 
@@ -82,12 +83,28 @@ BRA_complete <- inner_join(Rainfall_BR_processed,Temp_BR_processed)
 
 #Exercise 5: Check if there is any missing data for both temperature and rainfall series.
 
+summary(BRA_complete$Rainfall)
+
+sum(is.na(BRA_complete$Rainfall))
+sum(is.na(BRA_complete$Temperature_C))
+
+
+  
 
 
 
 #Exercise 6: Plot both series over time on separate plots. Add a trend line using geom_smooth(). Can you say something about the trend just by visualizing the data?
 
+# 
+BRA_complete %>% 
+  ggplot( aes(x = Date, y = Rainfall)) + 
+  geom_point() + 
+  geom_smooth( method = "lm")
 
+BRA_complete %>% 
+  ggplot( aes(x = Date, y = Temperature_C)) + 
+  geom_point() + 
+  geom_smooth( method = "lm")
 
 
 
@@ -98,9 +115,16 @@ BRA_complete <- inner_join(Rainfall_BR_processed,Temp_BR_processed)
 
 ```{r}
 #Exercise 7: Create a time series objects for each series using ts(). Make sure you specify the starting point and frequency.
+f_month <- month(first(BRA_complete$Date))
+f_year <- month(first(BRA_complete$Date))
 
+BRA_Temp_ts <- ts(BRA_complete$Temperature_C, 
+                  start = c(f_year,f_month), 
+                  frequency = 12)
 
-
+BRA_Rainfall_ts <- ts(BRA_complete$Rainfall, 
+                      start = c(f_year,f_month), 
+                      frequency = 12)
 ```
 
 
@@ -121,23 +145,36 @@ The `stl` function decomposes the time series object into its component parts. W
 # Exercise 8: Use the stl() function to decompose both series. 
 # Visualize the decomposed series using plot(). What components can you identify?
 
+Temp_decomp <- 
+stl(BRA_Temp_ts, s.window = "periodic")
+plot(Temp_decomp)
 
-
+Rainfall_decomp <- 
+stl(BRA_Rainfall_ts, s.window = "periodic")
+plot(Rainfall_decomp)
 
 
 
 # Exercise 9: Use the times series object generated with the stl() to extract the 
 # components of each series and turn them into data frames.
 
+Temp_Components <- as.data.frame(Temp_decomp$time.series)
 
+Temp_Components_df <- mutate(Temp_Components,
+        Observed_Temp = BRA_complete$Temperature_C,     
+        Date = BRA_complete$Date)
 
 
 
 
 # Exercise 10: Visualize how the trend maps onto the data for both series
 
+Temp_plot <- 
+  ggplot(Temp_Components_df) +
+  geom_line(aes(y = Observed_Temp, x = Date),  size = 0.25, color = "grey") +
+  geom_line(aes(y = trend, x = Date), color = "#c13d75ff") 
 
-
+print(Temp_plot)
 
 
 
@@ -158,17 +195,39 @@ Monotonic trends are a gradual shift over time that is consistent in direction. 
 
 # Exercise 11: Apply one of the trend detection test to the original data set. Remember that the data has seasonal component, which test can be applied in this case?
 
+Temp_trend <- 
+  Kendall::SeasonalMannKendall(BRA_Temp_ts)
+Temp_trend2 <- 
+  smk.test(BRA_Temp_ts)
 
-
-
-
-
-
+summary(Temp_trend)
+summary(Temp_trend2)
 
 
 # Exercise 12: Now remove the seasonality and apply another test. Compare the results with what you obtained on Exercise 9.
 
+ts_temp_noSeason <- ts(data = Temp_Components_df$Observed_Temp - Temp_Components_df$seasonal, 
+                       start = c(f_year,f_month), 
+                       frequency = 12)
 
+# rerun mk
+temp_mk <- Kendall::MannKendall(ts_temp_noSeason)
+summary(temp_mk)
+
+
+# before plotting add no season observed values to component dataframe
+
+Temp_Components_df_NS <- Temp_Components_df %>%
+  mutate( obv_noseason = Observed_Temp - seasonal)
+
+# plot
+### Q: which data to se to plot lines? double check against video
+Temp_plot_NS <- 
+  ggplot(Temp_Components_df_NS) +
+  geom_line(aes(y = obv_noseason, x = Date),  size = 0.25, color = "grey") +
+  geom_line(aes(y = trend, x = Date), color = "#c13d75ff") 
+
+print(Temp_plot_NS)
 
 
 
