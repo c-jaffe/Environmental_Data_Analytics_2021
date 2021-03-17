@@ -33,7 +33,11 @@ The completed exercise is due on Tuesday, March 16 at 11:59 pm.
 #1
 # check working directory
 getwd()
-
+## reset wd *for knitting*
+knitr::opts_knit$set( root.dir = 
+                        "C:/ENV872/Environmental_Data_Analytics_2021",
+                  tidy.opts = list(width.cutoff = 60),
+                  tidy = TRUE)
 
 # Library
 library(tidyverse)
@@ -155,14 +159,14 @@ summary(GaringerOzone$Daily.Max.8.hour.Ozone.Concentration)
 
 GaringerOzone <- 
   GaringerOzone %>% 
-  mutate( ozone_clean = zoo::na.approx(Daily.Max.8.hour.Ozone.Concentration))
+  mutate(ozone_clean = zoo::na.approx(Daily.Max.8.hour.Ozone.Concentration))
 #check
 summary(GaringerOzone$ozone_clean)
 
 
 ```
 
-> Answer: 
+> Answer: The linear interpolation assumes the value of missing data falls between the two nearest non-missing values. A spline interpolation is similar, but uses a quadratic function to estimate missing values. A linear interpolation is a safer assumption for our data given that the missing data only occurs for occasional single days, and we might reasonably assume that Ozone concentrations would be similar between adjacent days. We don't observe a quadratic relationship when plotting the data, so the spline is likely not appropriate for our data. The piecewise is also not appropriate because it would assign data for a missing day an equal value to the nearest day. Based on our plots we expect Ozone to change over time, so a linear interpolation is best. 
 
 
 9. Create a new data frame called `GaringerOzone.monthly` that contains aggregated data: mean ozone concentrations for each month. In your pipe, you will need to first add columns for year and month to form the groupings. In a separate line of code, create a new Date column with each month-year combination being set as the first day of the month (this is for graphing purposes only)
@@ -236,8 +240,9 @@ GaringerOzone.monthly %>%
                breaks = "1 year") + 
   labs( x = "Date", 
         y = "Mean Ozone Concentration (ppm)") + 
-  ggtitle("Mean Monthly Ozone Concentrations between 2010 and 2019") + 
-  theme(plot.title = element_text(vjust = 1))
+  ggtitle("Mean Monthly Ozone Concentration, 2010-2019") + 
+  theme(plot.title = element_text(vjust = 1,
+                                  size = 14))
 
 
 
@@ -279,10 +284,11 @@ componentsMonthly %>%
   labs( x = "Date", 
         y = "Mean Ozone Concentration (ppm)",
         subtitle = "Raw observations shown in gray, non-seaonsal data shown in blue") + 
-  ggtitle("Mean Monthly Ozone Concentrations between 2010 and 2019") + 
-  theme(plot.title = element_text(vjust = 1),
+  ggtitle("Mean Monthly Ozone Concentrations, 2010-2019") + 
+  theme(plot.title = element_text(vjust = 1,
+                                  size = 14),
         plot.subtitle = element_text(size = 10,
-                                     color = "grey" )) 
+                                     color = "darkgrey" )) 
 
 ```
 
