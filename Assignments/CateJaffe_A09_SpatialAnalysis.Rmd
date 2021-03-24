@@ -41,11 +41,42 @@ This exercise accompanies the lessons in Environmental Data Analytics
 
 ```{r Prepare workspace}
 #1.
+knitr::opts_knit$set( root.dir = 
+                        "/Users/Kate/Documents/1.Spring 2021/Environmental_Data_Analytics_2021",
+                  tidy.opts = list(width.cutoff = 60),
+                  tidy = TRUE)
 getwd()
 
-
 #2. 
+library(tidyverse)
+library(sf)
+library(leaflet)
+library(mapview)
+library(ggplot2)
+library(colormap)
 
+# set ggplot theme
+mytheme <- theme_classic( base_size = 14) + 
+  theme( axis.text = element_text( color = "#222222ff"),
+         legend.position = "top",
+         # remove legend title
+         legend.title = element_blank(),
+         # margins (top,right,bottom,left)
+         axis.title.x = element_text( color = "black",
+                                    margin = margin(20,0,0,0)),
+         axis.title.y = element_text( color = "black",
+                                    margin = margin(0,20,0,0)))
+theme_set(mytheme)
+
+
+mytheme <- theme_classic() + 
+  theme(axis.line = element_line(color = "#999999ff"),
+        plot.title = element_text(vjust = 1,
+                                  size = 14),
+        plot.subtitle = element_text(size = 10,
+                                     color = "#333333ff"))
+
+theme_set(mytheme)
 
 ```
 
@@ -64,13 +95,15 @@ code is `31` (as North Carolina's was `37`).
 
 ```{r Read the county data into an sf dataframe}
 #3. Read in Counties shapefile into an sf dataframe, filtering for just NE counties
-
+counties_sf <- st_read("./Data/Spatial/cb_2018_us_county_20m.shp") %>% 
+  filter(STATEFP == 31)
 
 #4. Reveal the CRS of the counties features
-
+st_crs(counties_sf)
 
 #5. Plot the data
-
+mapView(counties_sf,
+        layer.name = "Counties")
 ```
 
 6.  What is the EPSG code of the Counties dataset? Is this a geographic
@@ -79,7 +112,9 @@ code is `31` (as North Carolina's was `37`).
     associated? (Tip: look the EPSG code on
     <https://spatialreference.org>)
 
-> ANSWER:
+> ANSWER: The ESPG code is 4269 which corrosponds to NAD83, a geographic
+> coordinate system (uses angular coordinate units). The datum is the
+> North American Datum 1983.
 
 ### Read in gage locations csv as a dataframe, then display the column names it contains
 
@@ -93,16 +128,18 @@ Next we'll read in some USGS/NWIS gage location data added to the
 
 ```{r Read in USGS Gage Locations}
 #7. Read in gage locations csv as a dataframe
-
+gageDat <- read.csv("./Data/Raw/NWIS_SiteInfo_NE_RAW.csv")
 
 #8. Reveal the names of the columns
-
+colnames(gageDat)
 
 ```
 
 9.  What columns in the dataset contain the x and y coordinate values,
     respectively?\
-    \> ANSWER: \>
+    \> ANSWER: \> The x coordinates are stored in the "dec_long_va"
+    (longitude) field. Y coordinates are stored in the "dec_lat_va"
+    (latitude) field.
 
 ### Convert the dataframe to a spatial features ("sf") dataframe
 
@@ -115,17 +152,20 @@ Next we'll read in some USGS/NWIS gage location data added to the
 
 ```{r Convert dataframe to sf dataframe}
 #10. Convert to an sf object
-
+gageDat_sf <- st_as_sf(gageDat, coords = c('dec_long_va', 'dec_lat_va'), crs = st_crs(counties_sf))
 
 #11. Re-examine the column names
-
+colnames(gageDat_sf)
 
 ```
 
 12. What new field(s) appear in the sf dataframe created? What field(s),
     if any, disappeared?
 
-> ANSWER:
+> ANSWER: A new "geometry" field is added to the sf dataframe, created
+> from the supplied latitude and longitude values, The fields that
+> previously contained the latitude and longitude values ("dec_long_va"
+> and "dec_lat_va") are now gone.
 
 ### Plot the gage locations on top of the counties
 
@@ -137,7 +177,11 @@ Next we'll read in some USGS/NWIS gage location data added to the
 
 ```{r Plot the spatial features}
 #13. Plot the gage locations atop the county features
-
+ggplot() + 
+  geom_sf(data = counties_sf, color = "grey") +
+  geom_sf(data = gageDat_sf, color = "#0c3383ff", alpha = .7) +
+  labs(title = "NWIS Gage Locations in Nebraska",
+       subtitle = "Cate Jaffe")
 
 ```
 
@@ -164,19 +208,19 @@ recorded during the recent flood event. This file is titled
 
 ```{r}
 #14. Read the site flow data into a data frame
-
+gageHeight <- read.csv("./Data/Raw/NWIS_SiteFlowData_NE_RAW.csv")
 
 #15. Show the column names
-
+colnames(gageHeight)
 
 #16. Join location data to it
-
+gageJoin_sf <- inner_join(gageDat_sf, gageHeight, by = "site_no")
 
 #17. Show the column names of the joined dataset
-
+colnames(gageJoin_sf)
 
 #18. Show the dimensions of this joined dataset
-
+dim(gageJoin_sf)
 
 ```
 
@@ -189,9 +233,26 @@ height by color, shape, other visualization technique.
 
 ```{r}
 #Map the points, sized by gage height
+# transform for leaflet
+counties_sf_WGS84 <- st_transform(counties_sf, c = 4326)
+gageJoin_sf_WGS84 <- st_transform(gageJoin_sf, c = 4326)
 
 
-#ggplot
+#map
+leaflet() %>%  
+  addProviderTiles(providers$Stamen.TerrainBackground) %>% 
+  addPolygons(data = counties_sf_WGS84,
+              color = "grey",
+              stroke = TRUE,
+              weight = 1) %>% 
+  addCircleMarkers(data = gageJoin_sf_WGS84,
+              color = ~colorQuantile('Blues', gage_ht)(gage_ht),
+              stroke = FALSE,
+              radius = 3.5,
+              fillOpacity = .6,
+              popup = as.character(gageJoin_sf_WGS84$gage_ht))
+              )
+
 
 
 ```
@@ -213,10 +274,16 @@ We'll choose UTM Zone 14N (EPGS = 32614).
 
 ```{r}
 #20 Transform the counties and gage location datasets to UTM Zone 14
+counties_sf_UTM <- st_transform(counties_sf, c = 32614)
+gageJoin_sf_UTM <- st_transform(gageJoin_sf, c = 32614)
 
 
 #21 Plot the data
-
+ggplot() + 
+  geom_sf(data = counties_sf_UTM, color = "grey") + 
+  geom_sf(data = gageJoin_sf_UTM, color = "darkblue", alpha = .7) +
+  labs(title = "NWIS Gage Locations in Nebraska",
+       subtitle = "Cate Jaffe")
 
 ```
 
@@ -230,13 +297,20 @@ counties, \* the selected county, \* and the gage sites in that county
 
 ```{r}
 #22 Select the county
-
+lancaster_sf <-  counties_sf_UTM %>% filter(NAME == 'Lancaster') 
 
 #23 Select gages within the selected county
+# matrix subsetting
+lancasterGages <- gageJoin_sf_UTM[lancaster_sf,]
 
 
 #24 Plot
-
+ggplot() + 
+  geom_sf(data = counties_sf_UTM, color = "grey") + 
+  geom_sf(data = lancaster_sf, color = "darkorange", fill =  "orange", alpha = .2) + 
+  geom_sf(data = lancasterGages, color = "darkblue", alpha = .6, size = 1.5) +
+  labs(title = "NWIS Gage Locations in Nebraska",
+       subtitle = "Cate Jaffe")
 
 
 ```
