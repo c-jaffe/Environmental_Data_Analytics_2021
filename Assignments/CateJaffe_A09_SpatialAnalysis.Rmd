@@ -1,11 +1,13 @@
 ---
-title: "Assignment 9: Spatial Analysis in R"
-author: "Student Name"
-output: pdf_document
+title: 'Assignment 9: Spatial Analysis in R'
+author: "Cate Jaffe"
+output:
+  html_document:
+    df_print: paged
 geometry: margin=2.54cm
-editor_options: 
+editor_options:
   chunk_output_type: console
-  markdown: 
+  markdown:
     wrap: 72
 ---
 
@@ -39,7 +41,7 @@ This exercise accompanies the lessons in Environmental Data Analytics
 1.  Check your working directory
 2.  Import libraries: tidyverse, sf, leaflet, and mapview
 
-```{r Prepare workspace}
+```{r Prepare workspace, message = FALSE}
 #1.
 knitr::opts_knit$set( root.dir = 
                         "/Users/Kate/Documents/1.Spring 2021/Environmental_Data_Analytics_2021",
@@ -251,7 +253,6 @@ leaflet() %>%
               radius = 3.5,
               fillOpacity = .6,
               popup = as.character(gageJoin_sf_WGS84$gage_ht))
-              )
 
 
 
@@ -298,19 +299,32 @@ counties, \* the selected county, \* and the gage sites in that county
 ```{r}
 #22 Select the county
 lancaster_sf <-  counties_sf_UTM %>% filter(NAME == 'Lancaster') 
+lancaster_sf_WGS84 <- st_transform(lancaster_sf, c = 4326)
 
 #23 Select gages within the selected county
 # matrix subsetting
 lancasterGages <- gageJoin_sf_UTM[lancaster_sf,]
+landcasterGages_sf_WGS84 <- st_transform(lancasterGages, c = 4326)
 
 
 #24 Plot
-ggplot() + 
-  geom_sf(data = counties_sf_UTM, color = "grey") + 
-  geom_sf(data = lancaster_sf, color = "darkorange", fill =  "orange", alpha = .2) + 
-  geom_sf(data = lancasterGages, color = "darkblue", alpha = .6, size = 1.5) +
-  labs(title = "NWIS Gage Locations in Nebraska",
-       subtitle = "Cate Jaffe")
+
+leaflet() %>%  
+  addProviderTiles(providers$Stamen.TerrainBackground) %>% 
+  addPolygons(data = counties_sf_WGS84,
+              color = "grey",
+              stroke = TRUE,
+              weight = 1) %>% 
+  addPolygons(data = lancaster_sf_WGS84,
+              color = "purple",
+              stroke = TRUE,
+              fillOpacity = .2,
+              weight = 1) %>% 
+  addCircleMarkers(data = landcasterGages_sf_WGS84,
+              color = "darkblue",
+              stroke = FALSE,
+              radius = 2.5,
+              fillOpacity = .6)
 
 
 ```
