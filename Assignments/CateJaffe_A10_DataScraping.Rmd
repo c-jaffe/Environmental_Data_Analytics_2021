@@ -1,0 +1,319 @@
+---
+title: "Assignment 10: Data Scraping"
+author: "Cate Jaffe"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+
+# Total points:
+
+## OVERVIEW
+
+This exercise accompanies the lessons in Environmental Data Analytics on data scraping. 
+
+## Directions
+1. Change "Student Name" on line 3 (above) with your name.
+2. Work through the steps, **creating code and output** that fulfill each instruction.
+3. Be sure to **answer the questions** in this assignment document.
+4. When you have completed the assignment, **Knit** the text and code into a single PDF file.
+5. After Knitting, submit the completed exercise (PDF file) to the dropbox in Sakai. Add your last name into the file name (e.g., "Fay_10_Data_Scraping.Rmd") prior to submission.
+
+The completed exercise is due on Tuesday, April 6 at 11:59 pm.
+
+## Set up 
+1. Set up your session:
+
+* Check your working directory
+* Load the packages `tidyverse`, `rvest`, and any others you end up using.
+* Set your ggplot theme
+
+```{r, message = FALSE}
+#1
+setwd("/Users/Kate/Documents/1.Spring 2021/Environmental_Data_Analytics_2021")
+getwd()
+
+# set wd for knit
+knitr::opts_knit$set( root.dir = 
+                        "/Users/Kate/Documents/1.Spring 2021/Environmental_Data_Analytics_2021",
+                  tidy.opts = list(width.cutoff = 60),
+                  tidy = TRUE)
+
+# library
+library(tidyverse)
+library(rvest)
+library(ggplot2)
+library(lubridate)
+library(colormap)
+
+# ggplot theme
+mytheme <- theme_light( base_size = 14) + 
+  theme( axis.text = element_text( color = "#222222ff"),
+         legend.position = "top",
+         # remove legend title
+         legend.title = element_blank(),
+         # margins (top,right,bottom,left)
+         axis.title.x = element_text( color = "black",
+                                    margin = margin(20,0,0,0)),
+         axis.title.y = element_text( color = "black",
+                                    margin = margin(0,20,0,0)),
+         plot.subtitle = element_text(color = "#333333ff"))
+theme_set(mytheme)
+
+```
+
+2. We will be scraping data from the NC DEQs Local Water Supply Planning website, specifically the Durham's 2019 Municipal Local Water Supply Plan (LWSP): 
+ * Navigate to https://www.ncwater.org/WUDC/app/LWSP/search.php
+ * Change the date from 2020 to 2019 in the upper right corner.
+ * Scroll down and select the LWSP link next to Durham Municipality. 
+ * Note the web address: <https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2019>
+
+Indicate this website as the as the URL to be scraped. 
+
+```{r set.the.scraping.website}
+#2
+lwspPage <- read_html("https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2019")
+lwspPage
+
+```
+
+3. The data we want to collect are listed below:
+
+* From the "System Information" section:
+ * Water system name
+ * PSWID
+ * Ownership
+ 
+* From the "Water Supply Sources" section:
+ * Maximum monthly withdrawals (MGD)
+
+In the code chunk below scrape these values into the supplied variable names.
+
+```{r scrape.the.data}
+#3
+# water system name
+name <- lwspPage %>% 
+  html_nodes("div+ table tr:nth-child(1) td:nth-child(2)") %>% 
+  html_text()
+name
+
+# PSWID
+pwsid <- lwspPage %>% 
+  html_nodes("td tr:nth-child(1) td:nth-child(5)") %>% 
+  html_text()
+pwsid
+
+# ownership
+own <- lwspPage %>% 
+  html_nodes("div+ table tr:nth-child(2) td:nth-child(4)") %>% 
+  html_text()
+own
+
+# max monthly withdrawal
+mmw <- lwspPage %>% 
+  html_nodes("th~ td+ td") %>% 
+  html_text()
+mmw
+
+
+
+```
+
+
+4. Convert your scraped data into a dataframe. This dataframe should have a column for each of the 4 variables scraped and a row for the month corresponding to the withdrawal data. Also add a Date column that includes your month and year in data format. (Feel free to add a Year column too, if you wish.)
+
+>NOTE: It's likely you won't be able to scrape the monthly widthrawal data in order. You can overcome this by creating a month column in the same order the data are scraped: Jan, May, Sept, Feb, etc...
+
+5. Plot the max daily withdrawals across the months for 2019.
+
+```{r create.a.dataframe.from.scraped.data}
+#4
+
+# list of months, as ordered from website table.
+orderedMonths <- c('January', 'May', 'September',
+                   'February', 'June', 'October',
+                   'March', 'July', 'November',
+                   'April', 'August', 'December')
+
+# bind withdrawal values (converted to numeric) and month variable
+DEQ_df <- data_frame(orderedMonths, as.numeric(mmw)) %>% 
+  # rename columns
+  rename("month" = "orderedMonths",
+         "max_monthly_withdrawal" = "as.numeric(mmw)") %>% 
+  # add Date column with year and month, formatted as date
+  # day number set to 1st day of month (1) as default
+  mutate( Date = mdy(paste0(month, "01-2019"))) %>% 
+  # add columns for name, ownership, pwsid
+  mutate(water_system_name = name,
+         ownership = own,
+         PWSID = pwsid) %>% 
+  # reoroder columns
+  select(PWSID, water_system_name, ownership, Date, month, max_monthly_withdrawal)
+
+
+#5
+# plot
+
+DEQ_df %>% 
+  ggplot(aes(x = month, y = max_monthly_withdrawal, group = 1)) + 
+  geom_line(color = "darkblue", alpha = .5) + 
+  geom_point( color = "darkblue", alpha = .75, size = 2) +
+  labs(title = "Maximum Monthly Withdrawals for the City of Durham",
+       subtitle = "2019",
+       y = "Max Monthly Withdrawal (MGD)",
+       x = "Month") +  
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1)) + 
+  ylim(25, 55)
+  
+
+
+```
+
+6. Note that the PWSID and the year appear in the web address for the page we scraped. Construct a function using your code above that can scrape data for any PWSID and year for which the NC DEQ has data. Be sure to modify the code to reflect the year and data scraped.
+
+```{r construct.a.scraping.function}
+#6.
+DEQ.withdrawal.scrape <- function(PWSID, YEAR, DATAKEY){
+  # extract web page
+    page <- read_html(
+      paste0("https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=",
+             PWSID,
+             "&year=",
+             YEAR))
+  # extract data
+    data <- page %>% 
+      html_nodes(DATAKEY) %>%
+      html_text()
+  # put data in dataframe
+    # make sure list of months is inside function (in case deleted above)
+    orderedMonths <- c('January', 'May', 'September',
+                   'February', 'June', 'October',
+                   'March', 'July', 'November',
+                   'April', 'August', 'December')
+    # bind to df
+    data.frame(orderedMonths, as.numeric(data), 
+                         row.names = NULL) %>% 
+    rename("max_monthly_withdrawal" = "as.numeric.data.",
+           "month" = "orderedMonths") %>% 
+      # add columns for ID and year
+      mutate(PWSID = PWSID,
+             year = YEAR) %>% 
+     # reoder
+      select(PWSID, year, month, max_monthly_withdrawal)
+}
+
+
+```
+
+7. Use the function above to extract and plot max daily withdrawals for Durham for each month in 2015
+
+```{r fetch.and.plot.Durham.2015.data}
+#7
+# extract data from page
+mmw2015_DUR <- DEQ.withdrawal.scrape("03-32-010", "2015", "th~ td+ td")
+
+# plot
+mmw2015_DUR %>% 
+  ggplot(aes(x = month, y = max_monthly_withdrawal, group = 1)) + 
+  geom_line(color = "darkblue", alpha = .5) + 
+  geom_point(color = "darkblue", alpha = .75, size = 2) +
+  labs(title = "Maximum Monthly Withdrawals for the City of Durham",
+       subtitle = "2015",
+       y = "Max Monthly Withdrawal (MGD)",
+       x = "Month") +  
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1))
+
+```
+
+8. Use the function above to extract data for Asheville (PWSID = 01-11-010) in 2015. Combine this data with the Durham data collected above and create a plot that compares the Asheville to Durham's water withdrawals.
+
+```{r fetch.and.plot.AVL.2015.data}
+#8
+mmw2015_AVL <- DEQ.withdrawal.scrape("01-11-010", "2015", "th~ td+ td")
+
+# row bind dfs together
+mmw2015bind <- rbind(mmw2015_DUR, mmw2015_AVL)
+
+# plot
+mmw2015bind %>% 
+  ggplot(aes(x = month, y = max_monthly_withdrawal, group = PWSID, color = PWSID)) + 
+  geom_line(alpha = .5) + 
+  geom_point(size = 2) +
+  # recolor, adding labels so legend is readable
+  scale_color_manual(values = c("#026f2eff", "#007aa4ff"),
+                     labels = c("Asheville", "Durham")) + 
+  # labels
+  labs(title = "Maximum Monthly Withdrawals in Durham & Asheville",
+       subtitle = "2015",
+       y = "Max Monthly Withdrawal (MGD)",
+       x = "Month") +  
+  # adjust x axis labels and legend spacing
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1),
+        legend.text = element_text( margin = margin(r = 30, unit = "pt")))
+
+```
+
+```{r color reference, include = FALSE}
+
+scales::show_col(colormap(colormap = colormaps$greys, nshades = 16))
+
+#scales::show_col(colormap(colormap = colormaps$greens, nshades = 16))
+
+#scales::show_col(colormap(colormap = colormaps$earth, nshades = 16))
+
+#scales::show_col(colormap(colormap = colormaps$cool, nshades = 16))
+
+
+```
+
+9. Use the code & function you created above to plot Asheville's max daily withdrawal by months for the years 2010 thru 2019.Add a smoothed line to the plot.
+
+```{r plot.AVL.2010.2019}
+#9
+### extract data to single dataframe
+## setup
+# make a list of years of interest
+yearList <- c(2010:2019) 
+# make a list to store output dfs
+dfList <- list()
+
+## loop and extract data
+# for observations 1-10 in yearList...
+for (i in 1:length(yearList) ){
+  # apply scrape function, calling observation i from list of years
+  data <- DEQ.withdrawal.scrape("01-11-010", yearList[i], "th~ td+ td")
+  # append to list
+  dfList[[i]] <- data
+}
+  
+## bind using dplyr
+mmw2010to19_AVL <- bind_rows(dfList)
+
+# convert month to date to plot
+mmw2010to19_AVL <- mmw2010to19_AVL %>% 
+    mutate(Date = mdy(paste0(month, "01", year)))
+
+### plot
+mmw2010to19_AVL %>% 
+  ggplot(aes(x = Date, y = max_monthly_withdrawal)) + 
+  geom_point(color = "#555555ff") +
+  geom_line(alpha = .25) + 
+  geom_smooth(method = 'lm', se = FALSE, color = "#007aa4ff") +
+  scale_x_date(breaks = "1 year", date_labels = "%Y") +
+  labs(title = "Maximum Monthly Withdrawals in Asheville",
+       subtitle = "2010 - 2019",
+       y = "Max Monthly Withdrawal (MGD)",
+       x = "Date") 
+
+
+
+```
+
+>Question: Just by looking at the plot (i.e. not running statistics), does Asheville have a trend in water usage over time?
+
+> Answer: Yes, based on the trend between 2010 and 2019, water use in Asheville appears to be increasing over time.
+
